@@ -2,29 +2,28 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
 
-const Login = () => {
+export default function Login() {
   const navigate = useNavigate();
-  const [email, setEmail]       = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError]       = useState('');
-  const [loading, setLoading]   = useState(false);
-  const [showPass, setShowPass] = useState(false);
+  const [form,    setForm]    = useState({ email: '', password: '' });
+  const [error,   setError]   = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+    setError('');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
-      setError('Please fill in all fields');
-      return;
-    }
+    if (!form.email || !form.password) return setError('Please fill all fields');
     setLoading(true);
-    setError('');
     try {
-      const { data } = await authAPI.login({ email, password });
+      const { data } = await authAPI.login(form);
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       navigate('/home');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
+      setError(err.response?.data?.message || 'Login failed');
     } finally {
       setLoading(false);
     }
@@ -32,97 +31,79 @@ const Login = () => {
 
   return (
     <div className="auth-page">
-      <div className="auth-container">
+      <div className="auth-bg">
+        <div className="auth-bg__orb auth-bg__orb--1" />
+        <div className="auth-bg__orb auth-bg__orb--2" />
+        <div className="auth-bg__grid" />
+      </div>
 
-        {/* Login Form */}
+      <div className="auth-container">
+        {/* Left — form */}
         <div className="auth-card">
           <div className="auth-logo">
-            <span className="auth-logo__icon">🏢</span>
+            <div className="auth-logo__icon">E</div>
             <span className="auth-logo__text">EMS <span>Pro</span></span>
           </div>
+          <h1 className="auth-card__title">Welcome back 👋</h1>
+          <p className="auth-card__subtitle">Sign in to your account</p>
 
-          <div className="auth-card__header">
-            <h2 className="auth-card__title">Login to your account</h2>
-            <p className="auth-card__subtitle">Enter your email and password to continue</p>
-          </div>
-
-          {error && (
-            <div className="auth-alert auth-alert--error">
-              ⚠ {error}
-            </div>
-          )}
+          {error && <div className="auth-alert auth-alert--error">⚠ {error}</div>}
 
           <form className="auth-form" onSubmit={handleSubmit}>
             <div className="form-group">
-              <label className="form-label">Email Address</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => { setEmail(e.target.value); setError(''); }}
-                placeholder="Enter your email"
-                className="form-input"
-                autoComplete="email"
-              />
+              <label className="form-label">Email</label>
+              <div className="input-wrapper">
+                <span className="input-icon">📧</span>
+                <input
+                  className="form-input"
+                  type="email"
+                  name="email"
+                  placeholder="you@company.com"
+                  value={form.email}
+                  onChange={handleChange}
+                />
+              </div>
             </div>
 
             <div className="form-group">
               <label className="form-label">Password</label>
               <div className="input-wrapper">
+                <span className="input-icon">🔒</span>
                 <input
-                  type={showPass ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => { setPassword(e.target.value); setError(''); }}
-                  placeholder="Enter your password"
                   className="form-input"
-                  autoComplete="current-password"
+                  type="password"
+                  name="password"
+                  placeholder="Enter password"
+                  value={form.password}
+                  onChange={handleChange}
                 />
-                <button
-                  type="button"
-                  className="input-toggle"
-                  onClick={() => setShowPass(!showPass)}
-                >
-                  {showPass ? '🙈' : '👁'}
-                </button>
               </div>
             </div>
 
-            <button type="submit" className="btn-primary btn-full" disabled={loading}>
-              {loading ? (
-                <span className="btn-loading">
-                  <span className="spinner"></span> Logging in...
-                </span>
-              ) : (
-                'Login'
-              )}
+            <button className="btn-primary btn-full" type="submit" disabled={loading}>
+              {loading ? <span className="btn-loading"><span className="spinner" /> Signing in...</span> : 'Sign In →'}
             </button>
           </form>
 
           <p className="auth-switch">
-            Don't have an account?{' '}
-            <Link to="/signup" className="auth-link">Create account</Link>
+            No account? <Link to="/signup" className="auth-link">Create one →</Link>
           </p>
         </div>
 
-        {/* Side Panel */}
+        {/* Right — info panel */}
         <div className="auth-side">
           <div className="auth-side__content">
-            <h2>Manage your <span>employees</span> easily</h2>
-            <p>
-              A simple and easy-to-use Employee Management System.
-              Keep track of all your employees in one place.
-            </p>
+            <h2>One place for all your <span>employee</span> records</h2>
+            <p>Add, update, and manage employee information easily from one simple dashboard.</p>
             <div className="auth-features">
-              <div className="auth-feature"><span>✔</span> Add and manage employees</div>
-              <div className="auth-feature"><span>✔</span> View employee details</div>
-              <div className="auth-feature"><span>✔</span> Edit or remove records</div>
-              <div className="auth-feature"><span>✔</span> Secure login with JWT</div>
+              <div className="auth-feature"><span>✅</span> Secure login</div>
+              <div className="auth-feature"><span>📊</span> View stats</div>
+              <div className="auth-feature"><span>🔄</span> Soft delete</div>
+              <div className="auth-feature"><span>☁️</span> Cloud storage</div>
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );
-};
-
-export default Login;
+}

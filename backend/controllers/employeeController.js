@@ -3,9 +3,7 @@ const DeleteCount = require('../models/deleteCountModel');
 const fs = require('fs');
 const path = require('path');
 
-// @desc    Create new employee
-// @route   POST /api/employees
-// @access  Private
+
 const createEmployee = async (req, res) => {
   try {
     const { name, employeeId, department, salary, email } = req.body;
@@ -14,13 +12,12 @@ const createEmployee = async (req, res) => {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
-    // Check for duplicate employeeId
     const existingEmpId = await Employee.findOne({ employeeId, isDeleted: false });
     if (existingEmpId) {
       return res.status(409).json({ message: 'Employee ID already exists' });
     }
 
-    // Check for duplicate email
+
     const existingEmail = await Employee.findOne({ email: email.toLowerCase(), isDeleted: false });
     if (existingEmail) {
       return res.status(409).json({ message: 'Employee email already exists' });
@@ -51,9 +48,7 @@ const createEmployee = async (req, res) => {
   }
 };
 
-// @desc    Get all employees (non-deleted)
-// @route   GET /api/employees
-// @access  Private
+
 const getEmployees = async (req, res) => {
   try {
     const { search, department, page = 1, limit = 10 } = req.query;
@@ -94,9 +89,6 @@ const getEmployees = async (req, res) => {
   }
 };
 
-// @desc    Get single employee
-// @route   GET /api/employees/:id
-// @access  Private
 const getEmployee = async (req, res) => {
   try {
     const employee = await Employee.findOne({ _id: req.params.id, isDeleted: false });
@@ -109,9 +101,6 @@ const getEmployee = async (req, res) => {
   }
 };
 
-// @desc    Update employee
-// @route   PUT /api/employees/:id
-// @access  Private
 const updateEmployee = async (req, res) => {
   try {
     const { name, employeeId, department, salary, email } = req.body;
@@ -121,7 +110,7 @@ const updateEmployee = async (req, res) => {
       return res.status(404).json({ message: 'Employee not found' });
     }
 
-    // Check duplicate employeeId (excluding current)
+
     if (employeeId && employeeId !== employee.employeeId) {
       const existingEmpId = await Employee.findOne({
         employeeId,
@@ -133,7 +122,7 @@ const updateEmployee = async (req, res) => {
       }
     }
 
-    // Check duplicate email (excluding current)
+
     if (email && email.toLowerCase() !== employee.email) {
       const existingEmail = await Employee.findOne({
         email: email.toLowerCase(),
@@ -154,7 +143,7 @@ const updateEmployee = async (req, res) => {
     };
 
     if (req.file) {
-      // Remove old photo
+  
       if (employee.photo) {
         const oldPath = path.join(__dirname, '..', employee.photo);
         if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
@@ -179,9 +168,6 @@ const updateEmployee = async (req, res) => {
   }
 };
 
-// @desc    Soft delete employee
-// @route   DELETE /api/employees/:id
-// @access  Private
 const deleteEmployee = async (req, res) => {
   try {
     const employee = await Employee.findOne({ _id: req.params.id, isDeleted: false });
@@ -189,12 +175,12 @@ const deleteEmployee = async (req, res) => {
       return res.status(404).json({ message: 'Employee not found' });
     }
 
-    // Soft delete
+    
     employee.isDeleted = true;
     employee.deletedAt = new Date();
     await employee.save();
 
-    // Log deletion in DeleteCount collection
+ 
     await DeleteCount.create({
       employeeId: employee._id,
       employeeEmpId: employee.employeeId,
@@ -218,9 +204,7 @@ const deleteEmployee = async (req, res) => {
   }
 };
 
-// @desc    Get delete history / stats
-// @route   GET /api/employees/delete-history
-// @access  Private
+
 const getDeleteHistory = async (req, res) => {
   try {
     const history = await DeleteCount.find().sort({ deletedAt: -1 }).limit(50);
@@ -236,9 +220,7 @@ const getDeleteHistory = async (req, res) => {
   }
 };
 
-// @desc    Get dashboard stats
-// @route   GET /api/employees/stats
-// @access  Private
+
 const getStats = async (req, res) => {
   try {
     const totalActive = await Employee.countDocuments({ isDeleted: false });
